@@ -16,6 +16,7 @@ import maya.cmds as cmds
 import maya.mel as mel
 import maya.OpenMayaUI as omui
 import maya.api.OpenMaya as om
+import re
 
 
 
@@ -40,7 +41,7 @@ class standinManager(QtWidgets.QMainWindow):
 
         # Creates object, Title Name and Adds a QtWidget as our central widget/Main Layout
         self.setObjectName('standinManagerUI')
-        self.setWindowTitle('Standin Manager' + ' ' + 'v' + version)
+        self.setWindowTitle('StandIn Manager' + ' ' + 'v' + version)
         mainLayout = QtWidgets.QWidget(self)
         self.setCentralWidget(mainLayout)
         
@@ -55,14 +56,18 @@ class standinManager(QtWidgets.QMainWindow):
         columns.addLayout(self.col1, 1)
         columns.addLayout(self.col2, 3)
         
-        # Adding UI elements
+        # Adding layouts
         layout1 = QtWidgets.QVBoxLayout()
+        layout1A = QtWidgets.QVBoxLayout()
+        layout1B = QtWidgets.QHBoxLayout()
         layout2 = QtWidgets.QVBoxLayout()
         layout2A = QtWidgets.QHBoxLayout()
         layout2B = QtWidgets.QHBoxLayout()
 
         self.col1.addLayout(layout1)
-        self.col2.addLayout(layout2)
+        self.col2.addLayout(layout2)        
+        layout1.addLayout(layout1A)
+        layout1.addLayout(layout1B)
         layout2.addLayout(layout2A)
         layout2.addLayout(layout2B)
 
@@ -83,12 +88,15 @@ class standinManager(QtWidgets.QMainWindow):
         self.assQList.setMinimumWidth(150)
         self.assQList.itemSelectionChanged.connect(self.assSel)
 
+        self.selectLabel = QtWidgets.QLabel('Select')
         # select All button
-        self.selAllBtn = QtWidgets.QPushButton('Select All')
+        self.selAllBtn = QtWidgets.QPushButton('All')
+        self.selAllBtn.setFixedWidth(50)
         self.selAllBtn.clicked.connect(self.selectAll)
 
         # select None button
-        self.selNoneBtn = QtWidgets.QPushButton('Select None')
+        self.selNoneBtn = QtWidgets.QPushButton('None')
+        self.selNoneBtn.setFixedWidth(50)
         self.selNoneBtn.clicked.connect(self.selectNone)
 
         # Reload button
@@ -128,16 +136,17 @@ class standinManager(QtWidgets.QMainWindow):
         self.setBtn.setFixedHeight(18)
         self.setBtn.clicked.connect(self.setPath)
 
-        # Add status bar widget
+        # Status bar
         self.statusBar = QtWidgets.QStatusBar()
         self.setStatusBar(self.statusBar)
         self.statusBar.messageChanged.connect(self.statusChanged)
 
-        # Add elements to layout
-        layout1.addWidget(self.assSearchBox)
-        layout1.addWidget(self.assQList)
-        #layout1.addWidget(self.selAllBtn)
-        #layout1.addWidget(self.selNoneBtn)
+        # Adding all elements to layouts
+        layout1A.addWidget(self.assSearchBox)
+        layout1A.addWidget(self.assQList)
+        layout1B.addWidget(self.selectLabel)
+        layout1B.addWidget(self.selAllBtn)
+        layout1B.addWidget(self.selNoneBtn)
         layout1.addWidget(self.reloadBtn)
         
         layout2B.addWidget(self.viewModeLabel)
@@ -181,6 +190,7 @@ class standinManager(QtWidgets.QMainWindow):
         assList.append(cmds.ls(type='aiStandIn'))
         
         for ass in assList:
+            ass = [w.replace('Shape', '') for w in ass]
             ass.sort()
             self.assQList.addItems(ass)
 
@@ -189,13 +199,12 @@ class standinManager(QtWidgets.QMainWindow):
     def assSel(self):
         global assSelected
 
-        if self.assQList.currentItem():
-            items = self.assQList.selectedItems()
-            assSelected = []
-            for i in items:
-                assSelected.append(i.text())
-            self.statusBar.showMessage(str(assSelected), 4000)
-        
+        items = self.assQList.selectedItems()
+        assSelected = []
+        for i in items:
+            assSelected.append(i.text())
+        #self.statusBar.showMessage(str(assSelected), 4000) #for testing
+    
                                  
     ### Set View Mode
     def selViewMode(self):
@@ -244,22 +253,14 @@ class standinManager(QtWidgets.QMainWindow):
       
 
     def selectAll(self):
-        ''' wip '''
-        global assSelected
-        items = self.assQList.findItems('*', QtCore.Qt.MatchWildcard)
-        
-        assSelected = []
-        for ass in items:
-            assSelected.append(ass)
-        self.statusBar.showMessage(str(assSelected), 2000)
+        self.assQList.selectAll()
+        #self.statusBar.showMessage(str(assSelected), 2000) # for testing
 
         
     def selectNone(self):
         self.assQList.clearSelection()
         del assSelected[:]
-        allSelected = 0
-        self.statusBar.showMessage(str(allSelected), 2000)
-        return allSelected
+        #self.statusBar.showMessage(str(assSelected), 2000) #for testing
 
      
     def closeEvent(self, event):
