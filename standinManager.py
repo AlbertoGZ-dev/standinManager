@@ -20,7 +20,7 @@ import maya.api.OpenMaya as om
 
 
 # GENERAL VARS
-version = '0.1.0'
+version = '0.1.1'
 winWidth = 505
 winHeight = 305
 red = '#872323'
@@ -81,7 +81,7 @@ class standinManager(QtWidgets.QMainWindow):
         self.assQList = QtWidgets.QListWidget(self)
         self.assQList.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.assQList.setMinimumWidth(150)
-        self.assQList.itemClicked.connect(self.assSel)
+        self.assQList.itemSelectionChanged.connect(self.assSel)
 
         # select All button
         self.selAllBtn = QtWidgets.QPushButton('Select All')
@@ -186,7 +186,7 @@ class standinManager(QtWidgets.QMainWindow):
 
 
     ### Get selected standins in assQList
-    def assSel(self, item):
+    def assSel(self):
         global assSelected
 
         if self.assQList.currentItem():
@@ -194,6 +194,7 @@ class standinManager(QtWidgets.QMainWindow):
             assSelected = []
             for i in items:
                 assSelected.append(i.text())
+            self.statusBar.showMessage(str(assSelected), 4000)
         
                                  
     ### Set View Mode
