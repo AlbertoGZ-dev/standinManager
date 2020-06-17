@@ -5,7 +5,7 @@ standinManager is a tool for Maya to change massively properties in StandIn node
 
 #### Manual installation
 
-Place the *standinManager.py* and *\_\_init\_\_.py* files in a folder named *modelLoader* in your Maya scripts directory and create a python shell button with the following code:
+Place the *standinManager.py* and *\_\_init\_\_.py* files in a folder named *standinManager* in your Maya scripts directory and create a python shelf button with the following code:
 
 ```python
 from standinManager import standinManager
