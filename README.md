@@ -1,6 +1,9 @@
 # standinManager
 standinManager is a tool for Maya to change massively properties in StandIn nodes.
 
+<img src="https://github.com/AlbertoGZ-dev/standinManager/blob/master/standinManagerUI.png"></img>
+
+
 ## Setup
 
 #### Manual installation
