@@ -11,10 +11,6 @@ Email: albertogzonline@gmail.com
 from PySide2 import QtCore, QtWidgets, QtGui
 from shiboken2 import wrapInstance
 from collections import OrderedDict
-from PIL import ImageColor
-
-
-
 
 import maya.cmds as cmds
 import maya.mel as mel
@@ -267,7 +263,7 @@ class standinManager(QtWidgets.QMainWindow):
         
         if assSelected != []:
             color = QtWidgets.QColorDialog.getColor()
-            rgbInt = ImageColor.getcolor(str(color.name()), "RGB")  
+            rgbInt = tuple(int(color.name()[i:i + 2], 16) for i in (1, 3, 5))
             rgbFloat = tuple(int(color.name()[i:i + 2], 16) / 255. for i in (1, 3, 5))
             r = round(rgbFloat[0], 3)
             g = round(rgbFloat[1], 3)
