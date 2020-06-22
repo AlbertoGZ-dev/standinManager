@@ -1,5 +1,9 @@
 ## Changelog
 
+### v0.1.2
++ Added wire color function to set color on draw override.
+
+
 ### v0.1.1
 + Added buttons to select all and deselect all items in list.
 
