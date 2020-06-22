@@ -11,6 +11,10 @@ Email: albertogzonline@gmail.com
 from PySide2 import QtCore, QtWidgets, QtGui
 from shiboken2 import wrapInstance
 from collections import OrderedDict
+from PIL import ImageColor
+
+
+
 
 import maya.cmds as cmds
 import maya.mel as mel
@@ -21,7 +25,7 @@ import re
 
 
 # GENERAL VARS
-version = '0.1.1'
+version = '0.1.2'
 winWidth = 505
 winHeight = 305
 red = '#872323'
@@ -61,16 +65,15 @@ class standinManager(QtWidgets.QMainWindow):
         layout1A = QtWidgets.QVBoxLayout()
         layout1B = QtWidgets.QHBoxLayout()
         layout2 = QtWidgets.QVBoxLayout()
-        layout2A = QtWidgets.QHBoxLayout()
-        layout2B = QtWidgets.QHBoxLayout()
-
+        layout2A = QtWidgets.QGridLayout()
+        layout2A.setHorizontalSpacing(5)
+        layout2A.setVerticalSpacing(10)
+        
         self.col1.addLayout(layout1)
         self.col2.addLayout(layout2)        
         layout1.addLayout(layout1A)
         layout1.addLayout(layout1B)
         layout2.addLayout(layout2A)
-        layout2.addLayout(layout2B)
-
 
 
         ### UI ELEMENTS
@@ -136,6 +139,17 @@ class standinManager(QtWidgets.QMainWindow):
         self.setBtn.setFixedHeight(18)
         self.setBtn.clicked.connect(self.setPath)
 
+        # Color selector
+        self.colorPicker = QtWidgets.QColorDialog('Color')
+        self.colorLabel = QtWidgets.QLabel('Wire color')
+        self.colorLabel.setFixedWidth(60)
+        self.colorLabel.setAlignment(QtCore.Qt.AlignRight)
+        self.colorBtn = QtWidgets.QPushButton('')
+        self.colorBtn.setFixedWidth(170)
+        self.colorBtn.setFixedHeight(18)
+        self.colorBtn.setStyleSheet('background-color:rgb(0,0,0); color:black')
+        self.colorBtn.clicked.connect(self.wireColor)
+
         # Status bar
         self.statusBar = QtWidgets.QStatusBar()
         self.setStatusBar(self.statusBar)
@@ -149,13 +163,15 @@ class standinManager(QtWidgets.QMainWindow):
         layout1B.addWidget(self.selNoneBtn)
         layout1.addWidget(self.reloadBtn)
         
-        layout2B.addWidget(self.viewModeLabel)
-        layout2B.addWidget(self.viewModeComboBox, alignment=QtCore.Qt.AlignLeft)
-        layout2A.addWidget(self.fileLabel)
-        layout2A.addWidget(self.filePath)
-        layout2A.addWidget(self.getBtn)
-        layout2A.addWidget(self.setBtn)
-                
+        layout2A.addWidget(self.fileLabel, 1, 0)
+        layout2A.addWidget(self.filePath, 1, 1)
+        layout2A.addWidget(self.getBtn, 1, 2)
+        layout2A.addWidget(self.setBtn, 1, 3)
+        layout2A.addWidget(self.viewModeLabel, 2, 0)
+        layout2A.addWidget(self.viewModeComboBox, 2, 1)
+        layout2A.addWidget(self.colorLabel, 3, 0)
+        layout2A.addWidget(self.colorBtn, 3, 1)
+
         self.resize(winWidth, winHeight)
 
 
@@ -217,7 +233,6 @@ class standinManager(QtWidgets.QMainWindow):
 
             self.statusBar.showMessage('Changed view mode successfully!', 4000)
             self.statusBar.setStyleSheet('background-color:' + green)
-
         else:
             self.statusBar.showMessage('Nothing selected', 4000)
             self.statusBar.setStyleSheet('background-color:' + red)
@@ -246,7 +261,37 @@ class standinManager(QtWidgets.QMainWindow):
             self.filePath.setText(filename[0])
             return filename[0] 
     
-   
+
+
+    def wireColor(self):
+        
+        if assSelected != []:
+            color = QtWidgets.QColorDialog.getColor()
+            rgbInt = ImageColor.getcolor(str(color.name()), "RGB")  
+            rgbFloat = tuple(int(color.name()[i:i + 2], 16) / 255. for i in (1, 3, 5))
+            r = round(rgbFloat[0], 3)
+            g = round(rgbFloat[1], 3)
+            b = round(rgbFloat[2], 3)
+            colorFloat = 'r:'+str(r) +' g:'+ str(g) +' b:'+ str(b) 
+
+                
+            if color.isValid():
+                #self.colorBtn.setText(colorFloat)
+                self.colorBtn.setStyleSheet('background-color: rgba'+str(rgbInt)+'; color:black')
+
+                for ass in assSelected:
+                    cmds.setAttr(ass + '.overrideEnabled', 1)
+                    cmds.setAttr(ass + '.overrideRGBColors', 1)
+                    cmds.setAttr(ass + '.overrideColorRGB', rgbFloat[0],rgbFloat[1],rgbFloat[2])
+                
+                    self.statusBar.showMessage('Changed color to ' + colorFloat + ' successfully!', 4000)
+                    self.statusBar.setStyleSheet('background-color:' + green)
+        else:
+            self.statusBar.showMessage('Nothing selected', 4000)
+            self.statusBar.setStyleSheet('background-color:' + red)
+        
+
+
     def statusChanged(self, args):
         if not args:
             self.statusBar.setStyleSheet('background-color:none')
