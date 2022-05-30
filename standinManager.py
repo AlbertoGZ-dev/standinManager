@@ -30,7 +30,7 @@ green = '#207527'
 
 def getMainWindow():
     main_window_ptr = omui.MQtUtil.mainWindow()
-    mainWindow = wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
+    mainWindow = wrapInstance(int(main_window_ptr), QtWidgets.QWidget) #long renamed to int in Python3
     return mainWindow
 
 
