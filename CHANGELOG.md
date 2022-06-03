@@ -1,7 +1,11 @@
 ## Changelog
 
-### v0.1.3
+### v0.1.4
 + Added function to replace path only.
+
+
+### v0.1.3
++ (Skipped version)
 
 
 ### v0.1.2
