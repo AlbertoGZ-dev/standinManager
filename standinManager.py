@@ -17,12 +17,13 @@ import maya.mel as mel
 import maya.OpenMayaUI as omui
 import maya.api.OpenMaya as om
 import re
+import os
 
 
 
 # GENERAL VARS
-version = '0.1.2'
-winWidth = 505
+version = '0.1.4'
+winWidth = 620
 winHeight = 305
 red = '#872323'
 green = '#207527'
@@ -30,7 +31,7 @@ green = '#207527'
 
 def getMainWindow():
     main_window_ptr = omui.MQtUtil.mainWindow()
-    mainWindow = wrapInstance(int(main_window_ptr), QtWidgets.QWidget) #long renamed to int in Python3
+    mainWindow = wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
     return mainWindow
 
 
@@ -51,25 +52,28 @@ class standinManager(QtWidgets.QMainWindow):
         # Creating N vertical layout
         self.col1 = QtWidgets.QVBoxLayout()
         self.col2 = QtWidgets.QVBoxLayout()
+        self.col3 = QtWidgets.QVBoxLayout()
 
         # Set columns for each layout using stretch policy
-        columns.addLayout(self.col1, 1)
-        columns.addLayout(self.col2, 3)
+        columns.addLayout(self.col1, 3)
+        columns.addLayout(self.col2, 0)
+        columns.addLayout(self.col3, 5)
         
         # Adding layouts
         layout1 = QtWidgets.QVBoxLayout()
         layout1A = QtWidgets.QVBoxLayout()
         layout1B = QtWidgets.QHBoxLayout()
         layout2 = QtWidgets.QVBoxLayout()
-        layout2A = QtWidgets.QGridLayout()
-        layout2A.setHorizontalSpacing(5)
-        layout2A.setVerticalSpacing(10)
+        layout3 = QtWidgets.QGridLayout()
+    
         
         self.col1.addLayout(layout1)
-        self.col2.addLayout(layout2)        
+        self.col2.addLayout(layout2)
+        self.col3.addLayout(layout3)        
         layout1.addLayout(layout1A)
         layout1.addLayout(layout1B)
-        layout2.addLayout(layout2A)
+        layout2.addLayout(layout2)
+        layout3.addLayout(layout3, 3, 4)
 
 
         ### UI ELEMENTS
@@ -88,12 +92,13 @@ class standinManager(QtWidgets.QMainWindow):
         self.assQList.itemSelectionChanged.connect(self.assSel)
 
         self.selectLabel = QtWidgets.QLabel('Select')
-        # select All button
+        
+        # All button select
         self.selAllBtn = QtWidgets.QPushButton('All')
         self.selAllBtn.setFixedWidth(50)
         self.selAllBtn.clicked.connect(self.selectAll)
 
-        # select None button
+        # None button select
         self.selNoneBtn = QtWidgets.QPushButton('None')
         self.selNoneBtn.setFixedWidth(50)
         self.selNoneBtn.clicked.connect(self.selectNone)
@@ -104,8 +109,8 @@ class standinManager(QtWidgets.QMainWindow):
 
         # View Mode label
         self.viewModeLabel = QtWidgets.QLabel('View Mode')
-        self.viewModeLabel.setFixedWidth(60)
         self.viewModeLabel.setAlignment(QtCore.Qt.AlignRight)
+        
 
         # Combobox selector for View Mode
         self.viewModeComboBox = QtWidgets.QComboBox(self)
@@ -121,9 +126,10 @@ class standinManager(QtWidgets.QMainWindow):
 
         # File path
         self.fileLabel = QtWidgets.QLabel('File')
-        self.fileLabel.setFixedWidth(60)
-        self.fileLabel.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.fileLabel.setAlignment(QtCore.Qt.AlignRight)
         self.filePath = QtWidgets.QLineEdit(self)
+        
+        self.replacePath = QtWidgets.QCheckBox('Replace path only', self)
 
         self.getBtn = QtWidgets.QPushButton('Open')
         self.getBtn.setFixedWidth(35)
@@ -138,7 +144,6 @@ class standinManager(QtWidgets.QMainWindow):
         # Color selector
         self.colorPicker = QtWidgets.QColorDialog('Color')
         self.colorLabel = QtWidgets.QLabel('Wire color')
-        self.colorLabel.setFixedWidth(60)
         self.colorLabel.setAlignment(QtCore.Qt.AlignRight)
         self.colorBtn = QtWidgets.QPushButton('')
         self.colorBtn.setFixedWidth(170)
@@ -151,22 +156,34 @@ class standinManager(QtWidgets.QMainWindow):
         self.setStatusBar(self.statusBar)
         self.statusBar.messageChanged.connect(self.statusChanged)
 
-        # Adding all elements to layouts
+        # Spacer
+        separator = QtWidgets.QWidget()
+        separator.setFixedHeight(2)
+        separator.setStyleSheet("background-color:rgb(255,0,0)")           
+        
+        
+        #### Adding all elements to layouts
         layout1A.addWidget(self.assSearchBox)
         layout1A.addWidget(self.assQList)
         layout1B.addWidget(self.selectLabel)
         layout1B.addWidget(self.selAllBtn)
         layout1B.addWidget(self.selNoneBtn)
-        layout1.addWidget(self.reloadBtn)
+        layout1A.addWidget(self.reloadBtn)
+
+        #layout1.addSpacerItem(1)
         
-        layout2A.addWidget(self.fileLabel, 1, 0)
-        layout2A.addWidget(self.filePath, 1, 1)
-        layout2A.addWidget(self.getBtn, 1, 2)
-        layout2A.addWidget(self.setBtn, 1, 3)
-        layout2A.addWidget(self.viewModeLabel, 2, 0)
-        layout2A.addWidget(self.viewModeComboBox, 2, 1)
-        layout2A.addWidget(self.colorLabel, 3, 0)
-        layout2A.addWidget(self.colorBtn, 3, 1)
+        layout3.addWidget(self.fileLabel, 1,0)
+        layout3.addWidget(self.filePath, 1,1)
+        layout3.addWidget(self.replacePath, 2,1)
+        layout3.addWidget(self.getBtn, 1,2)
+        layout3.addWidget(self.setBtn, 1,3)
+        
+
+        layout3.addWidget(self.viewModeLabel, 3,0)
+        layout3.addWidget(self.viewModeComboBox, 3,1)
+        
+        layout3.addWidget(self.colorLabel, 4,0)
+        layout3.addWidget(self.colorBtn, 4,1)
 
         self.resize(winWidth, winHeight)
 
@@ -237,13 +254,25 @@ class standinManager(QtWidgets.QMainWindow):
     ### Set ass file path 
     def setPath(self):
         filePath = self.filePath.text()
-       
+        
         if assSelected != []:
             for ass in assSelected:
-                cmds.setAttr(ass + '.dso', str(filePath), type='string')
+                if (len(filePath) == 0) or (filePath.find('.ass') !=-1):
+                    self.statusBar.showMessage('Path is not valid or empty', 4000)
+                    self.statusBar.setStyleSheet('background-color:' + red)
 
-            self.statusBar.showMessage('Changed ass file successfully!', 4000)
-            self.statusBar.setStyleSheet('background-color:' + green)
+                else:
+                    if self.replacePath.isChecked():
+                        currentFilePath = cmds.getAttr(ass + '.dso')
+                        head, tail = os.path.split(currentFilePath)
+                        cmds.setAttr(ass + '.dso', str(filePath+'/'+tail), type='string')
+                        self.statusBar.showMessage('Path updated successfully!', 4000)
+                        self.statusBar.setStyleSheet('background-color:' + green)
+
+                    else:
+                        cmds.setAttr(ass + '.dso', str(filePath), type='string')
+                        self.statusBar.showMessage('Changed ass file successfully!', 4000)
+                        self.statusBar.setStyleSheet('background-color:' + green)
 
         else:
             self.statusBar.showMessage('Nothing selected', 4000)
