@@ -1,5 +1,9 @@
 ## Changelog
 
+### v0.1.3
++ Added function to replace path only.
+
+
 ### v0.1.2
 + Added wire color function to set color on draw override.
 
